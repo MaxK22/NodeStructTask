@@ -43,13 +43,18 @@ public:
             tail = NULL;
         }
     }
-    Node<T> operator[](int i) {
+    Node<T>* operator[](int i) {
+        if(head == NULL)
+            return NULL;
         Node<T>* x = head;
-        for(int j = 1; j < i && x->next != NULL; ++j)
+        int j = 1;
+        for(; j < i && x->next != NULL; ++j)
         {
             x = x->next;
         }
-        return *x;
+        if(j < i)
+            return NULL;
+        return x;
     }
     int check_size()
     {
@@ -90,12 +95,25 @@ public:
         if(i == 0)
             this->push_front(new_element);
         else{
-            Node<T>* x = new Node<T>(new_element);
-            Node<T>* y = *(this[i-1]);
-            x->next = y->next;
-            y->next = x;
-            if(x->next == NULL)
-                tail = x;
+            Node<T>* el = new Node<T>(new_element);
+            Node<T>* x = head;
+            int j = 1;
+            for(; j < i - 1 && x->next != NULL; ++j)
+            {
+                x = x->next;
+            }
+            if(x->next == NULL) {
+                x->next = el;
+                el->next = NULL;
+                tail = el;
+            }
+            else
+            {
+                el->next = x->next->next;
+                x->next = el;
+                if(el->next == NULL)
+                    tail = el;//
+            }
         }
     }
     void delete_front()
@@ -172,16 +190,17 @@ public:
         }
     }
     int find_by_element(T element) {
-            Node<T>* x = head;
-            int i = 0;
-            while (x != NULL) {
-                if (x->src == element) {
-                    return i;
-                }
-                x = x->next;
-                i++;
+        Node<T>* x = head;
+        int i = 0;
+        while (x != NULL) {
+            if (x->src == element) {
+                return i;
             }
-            return -1;
+            x = x->next;
+            i++;
+        }
+        cout << "Element wasn't found ";
+        return -1;
     }
     template<typename Type> friend ostream& operator<<(ostream& out, const List<Type>& list)
     {
@@ -204,20 +223,12 @@ public:
         int n = size/2;
         int m = size - n;
 
-
         Node<T>* mid = left;
         for(int j = 1; j < n; ++j)
         {
             mid = mid->next;
         }
         Node<T>* next_mid = mid->next;
-        /*
-        Node<T>* end = mid;
-        for(int j = 1; j <= m; ++j)
-        {
-            end = end->next;
-        }*/
-
 
         std::pair<Node<T>*, Node<T>*> middle_and_first = merge_sort(left, mid,  n);
         std::pair<Node<T>*, Node<T>*> middle_and_first2 = merge_sort(next_mid/* ???? */, right,  m);
@@ -241,35 +252,133 @@ public:
         pair<Node<T>*, Node<T>*> ans = make_pair(h, h);
         while(i <= n || j <= m)
         {
-                if(i <= n && now1->src < now2->src || j > m)
-                {
-                    h->next = now1;
-                    h = now1;
-                    now1 = now1->next;
-                    i++;
-                }
-                else
-                {
-                    h->next = now2;
-                    h = now2;
-                    now2 = now2->next;
-                    j++;
-                }
+            if((now1->src < now2->src && i <=n)|| j > m)
+            {
+                h->next = now1;
+                h = now1;
+                if(i < n) now1 = now1->next;
+                i++;
+            }
+            else
+            {
+                h->next = now2;
+                h = now2;
+                if(j < m) now2 = now2->next;
+                j++;
+            }
         }
         ans.second = h;
         if(head->src > ans.first->src)
             head = ans.first;
+        ans.second->next = NULL;
         return ans;
     }
 };
 
 int main() {
-    int a[10] = {10, 6, 3, 5, 8, 7, 9, 1, 2, 4};
-    cout << "ok \n";
-    List<int> list = List<int>(a, 10);
-    //cout << list << endl;
-    list.merge_sort(list.head, list.tail, 10).first;
-    cout << list;
+    cout << "Enter 'help' to see all commands" << endl;
+    List<int> list = List<int>();
+    string command;
+    cin >> command;
+    while(command != "end")
+    {
+        if(command == "help")
+            cout << "i element: 'i_el'" << endl <<
+            "size: 'size'" << endl <<
+            "is empty: 'is_empty'" << endl <<
+            "push front: 'p_f' [int](new element)" << endl <<
+            "push back: 'p_b' [int](new element)" << endl <<
+            "push i: 'p_i' [int](i) [int](new element)" << endl <<
+            "delete front: 'd_f'" << endl <<
+            "delete back: 'd_b'" << endl <<
+            "delete i: 'd_i' [int](i)" << endl <<
+            "delete element: 'd_el' [int](old element)" << endl <<
+            "find i by element: 'find' [int](old element)" << endl <<
+            "merge sort: 'm_sort'" << endl <<
+            "print: 'print'" << endl <<
+            "close programm: 'end'";
+        else if(command == "i_el")
+        {
+            int i;
+            cin >> i;
+            Node<int>* a = list[i];
+            if(a != NULL)
+            cout << list[i]->src;
+            else
+                cout << "Element wasn't found";
+        }
+        else if(command == "size")
+        {
+            cout << list.check_size();
+        }
+        else if(command == "is_empty")
+        {
+            cout << list.is_empty();
+        }
+        else if(command == "p_f")
+        {
+            int el;
+            cin >> el;
+            list.push_front(el);
+            cout << "element was pushed";
+        }
+        else if(command == "p_b")
+        {
+            int el;
+            cin >> el;
+            list.push_back(el);
+            cout << "element was pushed";
+        }
+        else if(command == "p_i")
+        {
+            int el, i;
+            cin >> i >> el;
+            list.push(i, el);
+            cout << "element was pushed";
+        }
+        else if(command == "d_f")
+        {
+            list.delete_front();
+            cout << "element was deleted";
+        }
+        else if(command == "d_b")
+        {
+            list.delete_back();
+            cout << "element was deleted";
+        }
+        else if(command == "d_i")
+        {
+            int i;
+            cin >> i;
+            list.delete_by_id(i);
+            cout << "element was deleted";
+        }
+        else if(command == "d_el")
+        {
+            int el;
+            cin >> el;
+            list.delete_by_element(el);
+            cout << "element was deleted";
+        }
+        else if(command == "find")
+        {
+            int el;
+            cin >> el;
+            cout << list.find_by_element(el);
+        }
+        else if(command == "m_sort")
+        {
+            int size = list.check_size();
+            list.merge_sort(list.head, list.tail, size);
+            cout << list;
+        }
+        else if(command == "print")
+        {
+            cout << list;
+        }
+        cout << endl;
+        cin >> command;
+    }
 
     return 0;
 }
