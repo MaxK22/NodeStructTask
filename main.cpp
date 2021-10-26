@@ -85,9 +85,10 @@ public:
     {
         Node<T>* x = new Node<T>(new_element);
         x->next = NULL;
-        tail->next = x;
         if(is_empty())
             head = x;
+        else
+            tail->next = x;
         tail = x;
     }
     void push(int i, T new_element)
@@ -109,7 +110,7 @@ public:
             }
             else
             {
-                el->next = x->next->next;
+                el->next = x->next;
                 x->next = el;
                 if(el->next == NULL)
                     tail = el;//
@@ -145,14 +146,22 @@ public:
     }
     void delete_by_id(int i)
     {
-        if(head != tail) {
+        if(i == 1 && !is_empty())
+        {
+            Node<T>* x = head;
+            head = x->next;
+            delete x;
+            if(head == NULL)
+                tail = NULL;
+        }
+        else if(head != tail) {
             Node<T>* x = head;
             int j;
             for(j = 1; j < i - 1 && x->next != NULL; ++j)
             {
                 x = x->next;
             }
-            if(j + 2 == i) {
+            if(j + 1 == i) {
                 Node<T> *c = x->next->next;
                 delete x->next;
                 x->next = c;
@@ -160,16 +169,19 @@ public:
                     tail = x;
             }
         }
-        else if(!is_empty() && i == 0)
-        {
-            delete head;
-            head = NULL;
-            tail = NULL;
-        }
     }
     void delete_by_element(T element) {
         if(head != NULL) {
             Node<T>* x = head;
+            if(x->src == element)
+            {
+                Node<T> *y = x->next;
+                delete x;
+                head = y;
+                if(y == NULL)
+                    tail = NULL;
+                return;
+            }
             while (x->next != NULL) {
                 if (x->next->src == element) {
                     Node<T> *y = x->next->next;
@@ -177,7 +189,7 @@ public:
                     x->next = y;
                     if(y == NULL)
                         tail = x;
-                    x = NULL;
+                    return;
                 }
                 x = x->next;
             }
@@ -364,12 +376,21 @@ int main() {
         {
             int el;
             cin >> el;
-            cout << list.find_by_element(el);
+            cout << list.find_by_element(el)+1;
         }
         else if(command == "m_sort")
         {
             int size = list.check_size();
+            Node<int>* x = new Node<int>(0);
+            x->next = NULL;
+            list.tail->next = x;
+
             list.merge_sort(list.head, list.tail, size);
+            delete x;
+            //list.tail->next = NULL;
+            x = list.head;
+            while(x->next!=NULL)x = x->next;
+            list.tail = x;
             cout << list;
         }
         else if(command == "print")
